@@ -1,0 +1,30 @@
+#Codigo em Power Query 
+
+let
+    API_advice = 
+    let
+        link = "https://api.adviceslip.com",
+        params =  "Callback",
+        consulta = 
+            Json.Document(
+                Web.Contents(
+
+                    link,
+                        [
+                            RelativePath = "/advice"
+                            
+                        ]
+                )
+            ),
+        Resultado = consulta[slip],
+        Resultado_id = Resultado[id],
+        Resultado_advice = Resultado[advice]
+    in
+        Resultado,
+
+    tb_Resultado = Table.PromoteHeaders(Table.Transpose(Record.ToTable(API_advice)),[PromoteAllScalars=true]),
+    
+    ExecutarScriptPython = Python.Execute("# 'dataset' tem os dados de entrada para este script#(lf)#(lf)import pandas as pd#(lf)from mtranslate import translate#(lf)#(lf)texto = dataset.iloc[0, 1]#(lf)#(lf)texto_tranduzido = translate(str(texto),""pt"")#(lf)#(lf)dataset[""Tranduzido""] = [texto_tranduzido]",[dataset=tb_Resultado]){[Name="dataset"]}[Value]
+    
+in
+    ExecutarScriptPython
